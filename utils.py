@@ -52,3 +52,15 @@ def show_image(image):
 def transpose(matrix):
     transposedMatrix = list(zip(*matrix))
     return transposedMatrix
+def sqrt(x):
+    return (x ** (1/2) )
+def pow2(x):
+    return (x ** 2 )
+
+def normbin(img):
+    height, width = img.shape
+    for r in range(0,height, 1):
+        for c in range(0,width,1):
+            img2[r,c]= img[r,c]/255
+    return img2
+
