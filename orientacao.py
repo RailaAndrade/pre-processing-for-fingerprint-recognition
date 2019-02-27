@@ -65,6 +65,7 @@ def orientacao_grad(img,n):
                 for j in range(c,c+blockW):
 
                     Gsx +=(sobelx[i,j]*sobelx[i,j]) - (sobely[i,j]*sobely[i,j])
+               
                     Gsy += 2*sobelx[i,j]* sobely[i,j]   
                     Gxy +=sobelx[i,j]*sobely[i,j]   
                     Gxx += sobelx[i,j]*sobelx[i,j]
@@ -85,10 +86,16 @@ def orientacao_grad(img,n):
                 fi = math.pi/2
             else:
                 fi = (0.5*math.atan2(Gsy, Gsx))
+                if Gsx==0.0:
+                    fi=math.pi
+                if Gsy==0.0:
+                    fi=0.0
+
 
             if fi< 0.0:
                 fi = fi +2*math.pi
-
+            if math.isnan(fi):
+                fi= math.pi
 
             
            
@@ -97,6 +104,7 @@ def orientacao_grad(img,n):
 
             mapa[r,c] = fi
 
+            
 
             #Fx=cv2.normalize(Fx.astype('float'),None,0,1,cv2.NORM_MINMAX)
             #Fy=cv2.normalize(Fy.astype('float'),None,0,1,cv2.NORM_MINMAX)
@@ -117,7 +125,7 @@ def orientacao_grad(img,n):
     for r in range(0,height):
         for c in range(0,width):
             smoothed[r,c]= (0.5*math.atan2(Fy_gauss[r,c], Fx_gauss[r,c]))
-           
+            
             '''if r%n==0 and c%n ==0:
                 x = c
                 y = r
@@ -143,28 +151,82 @@ def orientacao_grad(img,n):
     return smoothed
 
 def desenha_linhas(img,teta,n):   
-    
+    num=n/2
     plt.figure()
     height,width =img.shape  
-    for r in range(0,height):
-        for c in range(0,width):
-            if r%n==0 and c%n ==0:
+    '''for k in range(0,height):
+        for l in range(0,width):
+            if l%n==0 and l%n ==0 :
+                xi = l
+                yi = k
+                plt.plot([xi,xi+n], [yi, yi], 'k-', linewidth=0.5)
+                plt.plot([xi, xi], [yi, yi+n], 'k-', linewidth=0.5)'''
+
+    for r in range(-n,height):
+        for c in range(-n,width):
+            if r%num==0 and c%num ==0 :
                 x = c
                 y = r
 
-                length =n
+                length =5
 
-                y2 = int(y - length * math.cos(teta[r,c]))
-                x2 = int(x + length * math.sin(teta[r,c]))
-           
+                #y2 = int(y - length * math.cos(teta[r,c]))
+                #x2 = int(x + length * math.sin(teta[r,c]))
+                y2 = y - length * math.cos(teta[r,c])
+                x2 = x + length * math.sin(teta[r,c])
 
-                plt.plot([x, x2], [y, y2], 'b-', linewidth=1.5)
-                plt.plot([x,x], [y, y+n], 'k-', linewidth=0.5)
-                plt.plot([x, x+n], [y, y], 'k-', linewidth=0.5)
+                plt.plot([x, x2], [y, y2], 'r-', linewidth=2)
+                plt.plot([x+(n/2),x+n+(n/2)], [y+(n/2), y+(n/2)], 'k-', linewidth=0.5)
+                plt.plot([x+(n/2), x+(n/2)], [y+(n/2), y+n+(n/2)], 'k-', linewidth=0.5)
+    
     plt.imshow(img, cmap='gray',clim=(0,1))
+  
     ##plt.figure()
     ##plt.imshow(teta, cmap='gray',clim=(0,1))
 
     
+
+
+def montar_orientacao(img_m,height,width,n):
+    m=0
+
+    windowsize_r, windowsize_c =img_m[0].shape
+    
+
+    x=int(height/windowsize_r)
+    y=int(width/windowsize_c)
+
+    xi=height%windowsize_r
+    yi=width%windowsize_c
+
+
+    ci=(x*windowsize_r)+windowsize_r
+    ri=(y*windowsize_c)+windowsize_c
+
+    i=0
+    if(xi!=0) and (yi!=0):
+        hsv2= np.zeros((ci, ri))
+    elif (yi!=0) and(xi==0):
+       hsv2= np.zeros((height, ri))
+      
+    elif (yi==0) and(xi!=0):
+        hsv2= np.zeros((ci, width))
+
+        hsv2= np.zeros((height, ri))
+    elif (xi==0) and (yi==0) :
+        hsv2 = np.zeros((height, width))
+     
+    
+    for r in range(0,height,  windowsize_r):
+        for c in range(0,width,  windowsize_c):
+                img=orientacao_grad(img_m[m],n)
+                hsv2[r:r+ windowsize_r , c:c+ windowsize_c]= img
+                m=m+1
+        
+        
+    return hsv2
+
+
+
 
 
